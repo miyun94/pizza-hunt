@@ -1,5 +1,5 @@
 const {Schema, model} = require('mongoose'); 
-
+const dateFormat = require('../utils/dateFormat');
 
 //create the schema with data wanted 
 const PizzaSchema = new Schema({
@@ -11,19 +11,38 @@ const PizzaSchema = new Schema({
     },
     createdAt: {
       type: Date,
-      default: Date.now
+      default: Date.now, 
+      get: (createdAtVal) => dateFormat(createdAtVal)
     },
     size: {
       type: String,
       default: 'Large'
     },
     //empty brackets indicate an array as data type, but you can also just write Array instead too
-    toppings: []
-  });
-
+    toppings: [],
+  // tell Mongroose to expect an ObjectId and tell it that its data comes from the Comment model
+  comments: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: 'Comment'
+    }
+  ],
+toJSON: {
+    virtuals: true, 
+    getters: true,
+},
+// set to false because this is a virtual Mongoose returns and we don't need it 
+id: false
+}
+);
 
 // create the Pizza model using the PizzaSchema
 const Pizza = model('Pizza', PizzaSchema);
+
+// get total count of comments and replies on retrieval
+PizzaSchema.virtual('commentCount').get(function() {
+    return this.comments.length;
+  });
 
 // export the Pizza model
 module.exports = Pizza;
